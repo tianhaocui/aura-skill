@@ -32,16 +32,23 @@ Aura is an AI-native lightweight Java 17+ backend framework. It prioritizes mini
 ## Minimal App Pattern
 
 ```java
-import io.aura.Aura;
-import io.aura.web.Router;
+// Simplest: one-line startup, auto-scans caller's package for @Path classes
+public class App {
+    public static void main(String[] args) {
+        Aura.run(args);
+    }
+}
+```
 
+```java
+// With configuration
 public class App {
     public static void main(String[] args) {
         Aura.create()
             .port(8080)
-            .routes((Router r) -> {
-                r.get("/hello", ctx -> ctx.text("hi"));
-            })
+            .cors(true)
+            .mcp(true)
+            .scan("com.example")
             .start(args);
     }
 }
@@ -50,15 +57,20 @@ public class App {
 ## Route Registration Patterns
 
 ```java
-// Lambda (simple endpoints)
+// Pattern 1: @Path class + auto-scan (preferred for AI)
+@Path("/user")
+public class UserService {
+    public User get(int id) { ... }       // GET /user/{id}
+    public List<User> list() { ... }      // GET /user
+    public User create(CreateReq req) { ... } // POST /user
+    public void delete(int id) { ... }    // DELETE /user/{id}
+}
+// Registered automatically by Aura.run() or Aura.scan()
+
+// Pattern 2: Manual routes (for custom endpoints)
 r.get("/health", ctx -> ctx.text("ok"));
-
-// Method reference (business logic) — preferred for AI
 r.get("/user/{id}", userService, "get");
-r.post("/user", userService, "create");
-
-// CRUD batch (5 routes in 1 line)
-r.crud("/user", userService);
+r.crud("/user", userService);  // 5 routes in 1 line
 ```
 
 ## Service Class Pattern
@@ -95,18 +107,25 @@ record CreateReq(String name, int age) {}
 ```java
 Db db = Db.create("jdbc:mysql://localhost/mydb", "user", "pass");
 
-// Query builder (preferred — no SQL typos)
+// Dynamic SQL — null/blank params auto-skipped (recommended for complex queries)
+String sql = "SELECT * FROM user #where(name, '=', name) #and(age, '>', age) #orderBy(created)";
+db.find(sql, filterMap);                        // List<Row>
+db.paginate(sql, filterMap, pageNum, pageSize); // Page<Row>
+
+// Query builder (simple CRUD shortcut)
 db.table("user").where("age", ">", 18).find();
 db.table("user").where("id", 1).findOne();
 
 // Row CRUD
-Row.of("user").set("name", "tom").insert(db);
+Row.of("user").set("name", "tom").set("age", 25).insert(db);
+Row.of("user").id(123).set("name", "new").update(db);
+
+// Shortcuts
+db.findById("user", id);
+db.deleteById("user", id);
 
 // Transaction
-db.transaction(() -> {
-    db.execute("UPDATE ...", args);
-    db.execute("UPDATE ...", args);
-});
+db.transaction(() -> { db.execute(sql, args); });
 ```
 
 ## Middleware Pattern
