@@ -185,15 +185,23 @@ Aura.create()
 ## Maven Dependency
 
 ```xml
-<dependency>
-    <groupId>io.aura</groupId>
-    <artifactId>aura-web</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
-</dependency>
-<!-- Optional -->
-<dependency>
-    <groupId>io.aura</groupId>
-    <artifactId>aura-db</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
-</dependency>
+<parent>
+    <groupId>io.github.tianhaocui</groupId>
+    <artifactId>aura-parent</artifactId>
+    <version>0.1.0</version>
+</parent>
+
+<dependencies>
+    <dependency>
+        <groupId>io.github.tianhaocui</groupId>
+        <artifactId>aura-web</artifactId>
+    </dependency>
+    <!-- Optional -->
+    <dependency>
+        <groupId>io.github.tianhaocui</groupId>
+        <artifactId>aura-db</artifactId>
+    </dependency>
+</dependencies>
 ```
+
+Always inherit `aura-parent` — it provides `-parameters` compiler flag required for parameter name binding.
