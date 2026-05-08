@@ -4,23 +4,27 @@ AI skill that teaches coding assistants how to use the [Aura framework](https://
 
 ## Installation
 
-### Claude Code (oh-my-claudecode)
+```bash
+npx skills add tianhaocui/aura-skill
+```
+
+### Manual Installation
+
+#### Claude Code
 
 ```bash
 cp SKILL.md ~/.claude/skills/aura-framework/SKILL.md
 ```
 
-### Cursor
+#### Cursor
 
 Copy the content of `SKILL.md` into your project's `.cursorrules` file.
 
-### GitHub Copilot
+#### GitHub Copilot
 
 Copy the content into `.github/copilot-instructions.md`.
 
-### Any project using Aura
-
-Copy into your project's `CLAUDE.md`:
+#### Any project using Aura
 
 ```bash
 cp SKILL.md /path/to/your-project/CLAUDE.md
