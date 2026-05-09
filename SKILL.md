@@ -174,7 +174,60 @@ Aura.create()
     .start(args);            // --port=N --env=X --mcp-stdio
 ```
 
-## Common Mistakes to Avoid
+## Third-party Integration Pattern
+
+Aura has no DI container. Use `register/get` to share objects across services:
+
+```java
+// Register at startup
+Db db = Db.create("jdbc:mysql://localhost/mydb", "user", "pass");
+RedissonClient redis = Redisson.create(config);
+
+Aura.create()
+    .register(db)
+    .register(redis)
+    .onStop(a -> a.get(RedissonClient.class).shutdown())
+    .service(new CacheService(redis))
+    .service(new UserService(db))
+    .start(args);
+```
+
+```java
+// Service receives dependencies via constructor — explicit, no magic
+public class CacheService {
+    private final RedissonClient redis;
+
+    public CacheService(RedissonClient redis) {
+        this.redis = redis;
+    }
+
+    @Get("/{key}")
+    public Object get(String key) {
+        return redis.getBucket(key).get();
+    }
+}
+```
+
+```java
+// If you need app itself (e.g. to access props or multiple registered objects)
+public class MyService {
+    private final RedissonClient redis;
+    private final Db db;
+
+    public MyService(Aura app) {
+        this.redis = app.get(RedissonClient.class);
+        this.db = app.get(Db.class);
+    }
+}
+```
+
+Key rules:
+- Always pass dependencies via constructor, never use static fields
+- Register shared objects with `app.register()`, retrieve with `app.get(Type.class)`
+- Clean up resources with `app.onStop()`
+- Do NOT build a DI graph — if wiring gets complex, just pass objects directly
+
+
 
 - Do NOT use `@Autowired` or DI — just `new` your services
 - Do NOT create config files — use code + env vars
