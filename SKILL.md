@@ -147,9 +147,10 @@ Aura has built-in MCP support. Every HTTP route is automatically exposed as an M
 
 ### How it works
 
-1. Aura exposes `/__schema__` describing all routes
-2. `--mcp-stdio` starts a JSON-RPC bridge that reads from stdin, calls your HTTP routes, and writes to stdout
-3. AI clients (Claude Desktop, Cursor) talk to the bridge via stdio
+1. Aura starts the HTTP server normally
+2. `--mcp-stdio` additionally starts a JSON-RPC bridge on stdin/stdout
+3. The bridge fetches `/__schema__` to discover all routes, then translates MCP tool calls into HTTP requests to your running server
+4. AI clients (Claude Desktop, Cursor) talk to the bridge via stdio — your HTTP API stays fully functional at the same time
 
 ### Usage
 
