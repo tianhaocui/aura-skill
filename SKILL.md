@@ -143,13 +143,75 @@ r.exception(Validate.ValidationException.class, (e, ctx) ->
 
 ## MCP Integration
 
-```java
-Aura.create()
-    .routes(r -> r.crud("/user", userService))
-    .start(args);
-// Pass --mcp-stdio flag at runtime for Claude Desktop/Cursor integration
-// All routes are automatically exposed as MCP tools
+Aura has built-in MCP support. Every HTTP route is automatically exposed as an MCP tool — no extra code needed.
+
+### How it works
+
+1. Aura exposes `/__schema__` describing all routes
+2. `--mcp-stdio` starts a JSON-RPC bridge that reads from stdin, calls your HTTP routes, and writes to stdout
+3. AI clients (Claude Desktop, Cursor) talk to the bridge via stdio
+
+### Usage
+
+```bash
+# Start your app with MCP stdio enabled
+java -jar myapp.jar --mcp-stdio
 ```
+
+Claude Desktop config (`claude_desktop_config.json`):
+```json
+{
+  "mcpServers": {
+    "my-app": {
+      "command": "java",
+      "args": ["-jar", "/path/to/myapp.jar", "--mcp-stdio"]
+    }
+  }
+}
+```
+
+### Tool naming
+
+Routes are automatically named as MCP tools:
+- `GET /user` → `list_user`
+- `GET /user/{id}` → `get_user_by_id`
+- `POST /user` → `create_user`
+- `DELETE /user/{id}` → `delete_user_by_id`
+
+Add `@Desc` to improve tool descriptions for AI:
+```java
+@Path("/user")
+public class UserService {
+    @Desc("Find a user by their ID")
+    public Row get(@Desc("User ID") int id) { ... }
+}
+```
+
+### npm bridge (for remote/deployed apps)
+
+If your app is deployed remotely, generate an npm package so users can install it:
+
+```bash
+# Generate npm package
+java -cp myapp.jar io.aura.mcp.McpPackager http://my-server:8080 @myname/my-app-mcp ./mcp-npm
+
+# Publish to npm
+cd mcp-npm && npm publish --access public
+```
+
+Users then configure:
+```json
+{
+  "mcpServers": {
+    "my-app": {
+      "command": "npx",
+      "args": ["@myname/my-app-mcp"]
+    }
+  }
+}
+```
+
+The npm bridge reads `AURA_API_URL` env var at runtime, or falls back to the URL baked in at generation time.
 
 ## Testing Pattern
 
