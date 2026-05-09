@@ -145,10 +145,10 @@ r.exception(Validate.ValidationException.class, (e, ctx) ->
 
 ```java
 Aura.create()
-    .mcp(true)  // enables MCP Server on port+1
     .routes(r -> r.crud("/user", userService))
     .start(args);
-// --mcp-stdio flag for Claude Desktop/Cursor integration
+// Pass --mcp-stdio flag at runtime for Claude Desktop/Cursor integration
+// All routes are automatically exposed as MCP tools
 ```
 
 ## Testing Pattern
